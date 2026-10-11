@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Mission - Petualangan Keluarga Harmonis</title>
+    <!-- Tailwind CSS for modern utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Poppins for child-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        /* Custom animations & game visual effects */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.8)); }
+            50% { filter: drop-shadow(0 0 16px rgba(250, 204, 21, 1)); }
+        }
+        .sparkle-effect {
+            animation: pulseGlow 1.8s infinite;
+        }
+        @keyframes bounceSlow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .animate-bounce-slow {
+            animation: bounceSlow 1.5s ease-in-out infinite;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        .animate-wiggle {
+            animation: wiggle 0.4s ease-in-out infinite;
+        }
+        /* Custom scrollbar for inventory/items */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 min-h-screen text-slate-800 flex flex-col items-center justify-between overflow-x-hidden p-2 sm:p-4">
+
+    <!-- Top Bar: Title, Score, Progress & Sound Toggle -->
+    <header class="w-full max-w-5xl bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-3 sm:p-4 mb-3 flex flex-wrap items-center justify-between gap-3 border border-white/40 z-30">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg text-2xl animate-float">
+                <i class="fa-solid fa-house-chimney-user"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">FAMILY MISSION</h1>
+                <p class="text-xs text-slate-500 font-semibold">Belajar Kerjasama & Peran Keluarga</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 sm:space-x-6">
+            <!-- Stars/Badges Counter -->
+            <div class="flex items-center space-x-2 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200 shadow-sm">
+                <i class="fa-solid fa-star text-amber-500 text-lg animate-spin" style="animation-duration: 6s;"></i>
+                <span id="scoreDisplay" class="font-extrabold text-amber-700 text-base">0 / 6 Bintang</span>
+            </div>
+
+            <!-- Sound Toggle -->
+            <button id="soundToggleBtn" onclick="toggleSound()" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center text-slate-700 shadow-sm transition-all transform hover:scale-105 active:scale-95" title="Suara Efek">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+
+            <!-- Reset Game -->
+            <button onclick="confirmReset()" class="w-10 h-10 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center shadow-sm transition-all transform hover:scale-105 active:scale-95" title="Ulangi Permainan">
+                <i class="fa-solid fa-rotate-right text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Arena -->
+    <main class="w-full max-w-5xl flex-1 flex flex-col bg-slate-900/40 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden relative mb-3">
+        
+        <!-- View 1: House Map Selection -->
+        <div id="houseMapView" class="flex-1 flex flex-col p-4 sm:p-8 relative overflow-y-auto">
+            <div class="text-center mb-6">
+                <span class="bg-indigo-500/20 text-indigo-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-500/30">Peta Rumah Keluarga Harmonis</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Pilih Ruangan & Mulai Misi!</h2>
+                <p class="text-sm text-slate-300 max-w-lg mx-auto mt-1">Setiap ruangan menyimpan tantangan seru tentang peran anggota keluarga. Selesaikan semuanya untuk meraih trofi emas!</p>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto w-full pb-6">
+                <!-- Mission 1: Dapur -->
+                <div onclick="startMission(0)" class="group relative bg-gradient-to-br from-amber-500/90 to-orange-600/90 rounded-3xl p-5 shadow-xl border border-amber-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 1</span>
+                        <div id="badge-0" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-kitchen-set"></i> Dapur Bersih</h3>
+                        <p class="text-xs text-amber-100 mt-1">Membantu Ibu menyiapkan bahan makanan sehat.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Mission 2: Ruang Keluarga -->
+                <div onclick="startMission(1)" class="group relative bg-gradient-to-br from-blue-500/90 to-indigo-600/90 rounded-3xl p-5 shadow-xl border border-blue-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-couch"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 2</span>
+                        <div id="badge-1" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-house-laptop"></i> Ruang Keluarga</h3>
+                        <p class="text-xs text-blue-100 mt-1">Merapikan mainan dan menyusun jadwal bersama Ayah.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Mission 3: Kamar Tidur -->
+                <div onclick="startMission(2)" class="group relative bg-gradient-to-br from-emerald-500/90 to-teal-600/90 rounded-3xl p-5 shadow-xl border border-emerald-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-bed"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 3</span>
+                        <div id="badge-2" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-shirt"></i> Kamar Tidur</h3>
+                        <p class="text-xs text-emerald-100 mt-1">Merapikan tempat tidur dan melipat pakaian sendiri.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Mission 4: Halaman / Taman -->
+                <div onclick="startMission(3)" class="group relative bg-gradient-to-br from-lime-600/90 to-green-700/90 rounded-3xl p-5 shadow-xl border border-lime-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-seedling"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 4</span>
+                        <div id="badge-3" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-tree"></i> Taman Rumah</h3>
+                        <p class="text-xs text-lime-100 mt-1">Menyiram tanaman dan membersihkan daun kering bersama Kakak.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Mission 5: Ruang Belajar -->
+                <div onclick="startMission(4)" class="group relative bg-gradient-to-br from-violet-600/90 to-purple-700/90 rounded-3xl p-5 shadow-xl border border-violet-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-book-open"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 5</span>
+                        <div id="badge-4" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-graduation-cap"></i> Ruang Belajar</h3>
+                        <p class="text-xs text-violet-100 mt-1">Belajar bersama Adik dan merapikan rak buku.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Mission 6: Ruang Tamu -->
+                <div onclick="startMission(5)" class="group relative bg-gradient-to-br from-rose-500/90 to-pink-600/90 rounded-3xl p-5 shadow-xl border border-rose-400/40 cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col justify-between h-48">
+                    <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:scale-110 transition-transform"><i class="fa-solid fa-handshake"></i></div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">Misi 6</span>
+                        <div id="badge-5" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-heart"></i> Ruang Tamu Harmonis</h3>
+                        <p class="text-xs text-rose-100 mt-1">Menyambut tamu dengan sopan dan menjaga kerukunan keluarga.</p>
+                    </div>
+                    <div class="z-10 flex items-center text-xs font-bold text-white/90 group-hover:text-white gap-1 mt-2">
+                        <span>Masuk Ruangan</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hall of Fame / Trophy Button -->
+            <div class="mt-auto pt-4 flex justify-center">
+                <button onclick="openTrophyRoom()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-extrabold px-6 py-3 rounded-2xl shadow-lg flex items-center gap-3 transform hover:scale-105 active:scale-95 transition-all">
+                    <i class="fa-solid fa-trophy text-xl text-yellow-900"></i>
+                    <span>Galeri Penghargaan & Lencana</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- View 2: Active Mission Room Arena -->
+        <div id="missionRoomView" class="flex-1 flex flex-col hidden relative">
+            
+            <!-- Room Top Navigation Bar -->
+            <div class="bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-white/10 flex items-center justify-between z-20">
+                <button onclick="returnToMap()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Kembali ke Peta</span>
+                </button>
+                <div id="missionTitleHeader" class="text-white font-extrabold text-base sm:text-lg text-center truncate px-2">
+                    Misi Aktif
+                </div>
+                <div id="missionProgressIndicator" class="bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-3 py-1 rounded-xl text-xs font-bold">
+                    Tugas 1/3
+                </div>
+            </div>
+
+            <!-- Room Background & Interactive Canvas/Stage -->
+            <div id="roomStage" class="flex-1 relative flex flex-col items-center justify-between p-4 sm:p-6 overflow-hidden">
+                
+                <!-- Background Environment Layer with Parallax / Depth -->
+                <div id="roomBackgroundDecor" class="absolute inset-0 pointer-events-none opacity-25 flex items-center justify-center text-9xl text-white">
+                    <i id="roomBgIcon" class="fa-solid fa-house"></i>
+                </div>
+
+                <!-- Character & Speech Bubble Area -->
+                <div class="w-full flex items-center justify-between z-10 mb-4">
+                    <!-- Character Avatar with Expressive Animation -->
+                    <div class="flex items-center space-x-3 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-lg animate-float">
+                        <div id="characterAvatar" class="w-14 h-14 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-md">
+                            👩‍🍳
+                        </div>
+                        <div>
+                            <h4 id="characterName" class="text-white font-bold text-sm">Ibu & Anak</h4>
+                            <p id="characterMood" class="text-xs text-amber-300 font-medium">Semangat membantu!</p>
+                        </div>
+                    </div>
+
+                    <!-- Speech Bubble for Guidance & Feedback (NO browser alert) -->
+                    <div id="speechBubble" class="flex-1 ml-4 bg-white/95 backdrop-blur-md text-slate-800 p-3.5 rounded-2xl shadow-xl border-2 border-indigo-400 relative max-w-md animate-bounce-slow">
+                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-l-2 border-b-2 border-indigo-400 transform rotate-45"></div>
+                        <p id="speechText" class="text-xs sm:text-sm font-semibold leading-relaxed">Halo! Pilih bahan makanan yang sehat untuk dimasak hari ini ya.</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Task Container (Changes per mission) -->
+                <div id="missionInteractiveArea" class="w-full max-w-3xl bg-slate-900/70 backdrop-blur-md border border-white/20 rounded-3xl p-4 sm:p-6 shadow-2xl z-10 flex flex-col items-center justify-center min-h-[300px]">
+                    <!-- Dynamic mission content injected via JS -->
+                </div>
+
+                <!-- Bottom Floating Particles / Sparkles -->
+                <div class="absolute bottom-2 left-4 right-4 flex justify-between pointer-events-none opacity-40 text-amber-300 text-sm">
+                    <i class="fa-solid fa-sparkles animate-pulse"></i>
+                    <i class="fa-solid fa-star sparkle-effect"></i>
+                    <i class="fa-solid fa-heart animate-bounce"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Success Modal -->
+        <div id="successModal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-amber-400/50 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative animate-float">
+                <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-500 rounded-full mx-auto flex items-center justify-center text-slate-900 text-4xl shadow-lg mb-4 sparkle-effect">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h3 id="successTitle" class="text-2xl font-extrabold text-white">Misi Selesai!</h3>
+                <p id="successDesc" class="text-sm text-slate-300 mt-2">Hebat sekali! Kamu berhasil membantu keluarga dengan penuh tanggung jawab.</p>
+                <div class="my-5 bg-white/10 rounded-2xl p-4 border border-white/10">
+                    <span class="text-xs text-amber-300 font-bold uppercase tracking-wider">Reward Diperoleh</span>
+                    <div id="rewardBadgeName" class="text-lg font-extrabold text-white mt-1">Lencana Koki Cilik 🍳</div>
+                </div>
+                <button onclick="closeSuccessAndReturn()" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-900 font-extrabold py-3.5 rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 text-base">
+                    Lanjut ke Misi Berikutnya <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Trophy Room / Gallery Modal -->
+        <div id="trophyModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-white/20 rounded-3xl max-w-2xl w-full p-6 text-center shadow-2xl relative flex flex-col max-h-[90vh]">
+                <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-400"></i> Galeri Penghargaan Keluarga</h3>
+                    <button onclick="closeTrophyRoom()" class="w-9 h-9 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4 py-2" id="badgeGalleryList">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/10">
+                    <button onclick="closeTrophyRoom()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-lg transition-all">
+                        Kembali ke Peta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Information -->
+    <footer class="w-full max-w-5xl text-center text-xs text-slate-400 pb-2">
+        <p>FAMILY MISSION &bull; Standar Game Edukasi Komersial SD &bull; Mengembangkan Karakter & Kerjasama Keluarga</p>
+    </footer>
+
+    <script>
+        // Game State Management
+        let gameState = {
+            score: 0,
+            missionsCompleted: [false, false, false, false, false, false],
+            currentMissionIndex: null,
+            currentTaskStep: 0
+        };
+
+        // Mission Definitions with Unique Game Mechanics
+        const missionsData = [
+            {
+                id: 0,
+                title: "Misi 1: Dapur Bersih (Membantu Ibu)",
+                bgIcon: "fa-utensils",
+                characterName: "Ibu & Kamu",
+                characterAvatar: "👩‍🍳",
+                characterMood: "Siap memasak!",
+                intro: "Halo! Bantu Ibu memilih bahan makanan yang segar & sehat serta membuang sampah pada tempatnya ya.",
+                tasks: [
+                    {
+                        type: "categorize",
+                        question: "Pilih 3 Bahan Makanan Sehat untuk Sup Sayur!",
+                        items: [
+                            { name: "Wortel Segar", icon: "fa-carrot", valid: true },
+                            { name: "Brokoli Hijau", icon: "fa-seedling", valid: true },
+                            { name: "Kentang", icon: "fa-circle", valid: true },
+                            { name: "Kue Permen", icon: "fa-candy-cane", valid: false },
+                            { name: "Minuman Soda", icon: "fa-bottle-droplet", valid: false }
+                        ],
+                        requiredCount: 3
+                    },
+                    {
+                        type: "sort_waste",
+                        question: "Pilih dan buang sampah sisa sayur ke Tempat Sampah Organik!",
+                        items: [
+                            { name: "Kulit Wortel", icon: "fa-leaf", valid: true },
+                            { name: "Plastik Bungkus", icon: "fa-bag-shopping", valid: false }
+                        ]
+                    }
+                ],
+                rewardBadge: "Lencana Koki Cilik 🍳"
+            },
+            {
+                id: 1,
+                title: "Misi 2: Ruang Keluarga Harmonis",
+                bgIcon: "fa-couch",
+                characterName: "Ayah & Kamu",
+                characterAvatar: "👨‍👧",
+                characterMood: "Semangat merapikan!",
+                intro: "Ruang keluarga berantakan setelah bermain. Yuk rapikan mainan dan susun bantal sofa bersama Ayah!",
+                tasks: [
+                    {
+                        type: "drag_match",
+                        question: "Letakkan mainan kembali ke Kotak Mainan!",
+                        items: [
+                            { name: "Mobil-mobilan", icon: "fa-car", target: "box" },
+                            { name: "Boneka Beruang", icon: "fa-child", target: "box" },
+                            { name: "Buku Cerita", icon: "fa-book", target: "shelf" }
+                        ]
+                    }
+                ],
+                rewardBadge: "Lencana Anak Teladan 🛋️"
+            },
+            {
+                id: 2,
+                title: "Misi 3: Kamar Tidur Mandiri",
+                bgIcon: "fa-bed",
+                characterName: "Kamu & Kamar Rapi",
+                characterAvatar: "🛏️",
+                characterMood: "Mandiri & Disiplin",
+                intro: "Bangun pagi dengan semangat! Mari rapikan tempat tidur dan lipat pakaianmu sendiri.",
+                tasks: [
+                    {
+                        type: "sequence",
+                        question: "Susun urutan merapikan tempat tidur yang benar:",
+                        steps: [
+                            "1. Bangun pagi & ucapkan terima kasih",
+                            "2. Tarik selimut hingga lurus dan rapi",
+                            "3. Letakkan bantal di tempat semula"
+                        ]
+                    }
+                ],
+                rewardBadge: "Lencana Raja Kamar Rapuh 🛏️"
+            },
+            {
+                id: 3,
+                title: "Misi 4: Taman Rumah Hijau",
+                bgIcon: "fa-tree",
+                characterName: "Kakak & Kamu",
+                characterAvatar: "🌱",
+                characterMood: "Cinta Lingkungan",
+                intro: "Tanaman di halaman haus! Mari siram bunga dan cabut rumput liar bersama Kakak.",
+                tasks: [
+                    {
+                        type: "watering",
+                        question: "Klik pada tanaman yang layu untuk menyiramnya hingga segar!",
+                        plants: [
+                            { id: 0, watered: false, name: "Bunga Mawar" },
+                            { id: 1, watered: false, name: "Tanaman Anggrek" },
+                            { id: 2, watered: false, name: "Pohon Mawar Kecil" }
+                        ],
+                        totalNeeded: 3
+                    }
+                ],
+                rewardBadge: "Lencana Sahabat Tanaman 🌿"
+            },
+            {
+                id: 4,
+                title: "Misi 5: Ruang Belajar Ceria",
+                bgIcon: "fa-book-open",
+                characterName: "Adik & Kamu",
+                characterAvatar: "📚",
+                characterMood: "Suka Belajar",
+                intro: "Adik kesulitan merapikan buku pelajaran di rak. Bantu Adik menyusun buku berdasarkan kelompoknya!",
+                tasks: [
+                    {
+                        type: "sort_books",
+                        question: "Kelompokkan buku cerita dan buku matematika ke rak yang tepat!",
+                        books: [
+                            { name: "Buku Cerita Kancil", category: "cerita", icon: "fa-feather" },
+                            { name: "Buku Matematika Dasar", category: "matematika", icon: "fa-calculator" },
+                            { name: "Buku Dongeng Nusantara", category: "cerita", icon: "fa-book-atlas" }
+                        ]
+                    }
+                ],
+                rewardBadge: "Lencana Sahabat Pintar 📖"
+            },
+            {
+                id: 5,
+                title: "Misi 6: Ruang Tamu Ramah",
+                bgIcon: "fa-handshake",
+                characterName: "Seluruh Keluarga",
+                characterAvatar: "👨‍👩‍👧‍👦",
+                characterMood: "Keluarga Harmonis",
+                intro: "Tamu datang berkunjung! Sambut dengan senyuman, salam ramah, dan tawarkan minuman sopan.",
+                tasks: [
+                    {
+                        type: "choices_roleplay",
+                        question: "Apa kalimat yang tepat saat menyambut tamu di rumah?",
+                        options: [
+                            { text: "\"Silakan masuk dan duduk, Tamu terhormat! Selamat datang.\"", correct: true },
+                            { text: "\"Mau apa datang kemari? Pergi sana!\"", correct: false },
+                            { text: "\"Diam saja dan acuhkan tamu.\"", correct: false }
+                        ]
+                    }
+                ],
+                rewardBadge: "Lencana Keluarga Harmonis 🏆"
+            }
+        ];
+
+        // Sound Effects (Web Audio API Synthesizer - No external audio files needed)
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                osc.frequency.setValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.setValueAtTime(150, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-lg";
+                showSpeech("Suara aktif! Yuk main dengan seru.");
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-lg";
+                showSpeech("Suara dinonaktifkan.");
+            }
+            playSound('click');
+        }
+
+        function updateUI() {
+            // Update score
+            const completedCount = gameState.missionsCompleted.filter(Boolean).length;
+            document.getElementById('scoreDisplay').innerText = `${completedCount} / 6 Bintang`;
+
+            // Update badges in House Map
+            for (let i = 0; i < 6; i++) {
+                const badgeEl = document.getElementById(`badge-${i}`);
+                if (gameState.missionsCompleted[i]) {
+                    badgeEl.className = "w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm shadow-md sparkle-effect";
+                    badgeEl.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                } else {
+                    badgeEl.className = "w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-sm";
+                    badgeEl.innerHTML = `<i class="fa-solid fa-lock"></i>`;
+                }
+            }
+        }
+
+        function startMission(index) {
+            playSound('click');
+            gameState.currentMissionIndex = index;
+            gameState.currentTaskStep = 0;
+
+            const mission = missionsData[index];
+            document.getElementById('missionTitleHeader').innerText = mission.title;
+            document.getElementById('roomBgIcon').className = `fa-solid ${mission.bgIcon}`;
+            document.getElementById('characterName').innerText = mission.characterName;
+            document.getElementById('characterAvatar').innerText = mission.characterAvatar;
+            document.getElementById('characterMood').innerText = mission.characterMood;
+            showSpeech(mission.intro);
+
+            // Switch views
+            document.getElementById('houseMapView').classList.add('hidden');
+            document.getElementById('missionRoomView').classList.remove('hidden');
+
+            renderCurrentTask();
+        }
+
+        function returnToMap() {
+            playSound('click');
+            document.getElementById('missionRoomView').classList.add('hidden');
+            document.getElementById('houseMapView').classList.remove('hidden');
+            updateUI();
+        }
+
+        function showSpeech(text) {
+            const speechEl = document.getElementById('speechText');
+            speechEl.innerText = text;
+        }
+
+        function renderCurrentTask() {
+            const mission = missionsData[gameState.currentMissionIndex];
+            const task = mission.tasks[gameState.currentTaskStep];
+            const area = document.getElementById('missionInteractiveArea');
+            
+            document.getElementById('missionProgressIndicator').innerText = `Tugas ${gameState.currentTaskStep + 1}/${mission.tasks.length}`;
+            area.innerHTML = '';
+
+            if (task.type === 'categorize') {
+                let selectedItems = [];
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                        <p class="text-xs text-indigo-300 mt-1">Pilih 3 bahan makanan yang benar (0/3 dipilih)</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-lg mb-4" id="catItemsGrid">
+                `;
+                task.items.forEach((item, idx) => {
+                    html += `
+                        <button onclick="handleCategorizeClick(${idx}, ${item.valid})" id="cat-btn-${idx}" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-4 flex flex-col items-center justify-center text-white transition-all transform hover:scale-105 active:scale-95">
+                            <i class="fa-solid ${item.icon} text-3xl mb-2 text-amber-300"></i>
+                            <span class="text-xs font-semibold">${item.name}</span>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'sort_waste') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-4 justify-center mb-6">
+                `;
+                task.items.forEach((item, idx) => {
+                    html += `
+                        <div onclick="handleWasteClick(${item.valid})" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-4 flex flex-col items-center text-white cursor-pointer transition-all hover:scale-105">
+                            <i class="fa-solid ${item.icon} text-3xl mb-2 text-emerald-300"></i>
+                            <span class="text-xs font-semibold">${item.name}</span>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'drag_match') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                        <p class="text-xs text-indigo-300 mt-1">Klik item untuk merapikannya ke tempat penyimpanan</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg mb-4" id="toyGrid">
+                `;
+                task.items.forEach((item, idx) => {
+                    html += `
+                        <button onclick="handleToyClick(${idx})" id="toy-${idx}" class="bg-white/10 hover:bg-indigo-600/40 border border-white/20 rounded-2xl p-4 flex flex-col items-center justify-center text-white transition-all">
+                            <i class="fa-solid ${item.icon} text-3xl mb-2 text-blue-300"></i>
+                            <span class="text-xs font-semibold">${item.name}</span>
+                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full mt-2">Rapikan</span>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'sequence') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                    </div>
+                    <div class="flex flex-col gap-3 w-full max-w-md mb-4">
+                `;
+                task.steps.forEach((step, idx) => {
+                    html += `
+                        <button onclick="handleSequenceClick(${idx})" class="bg-white/10 hover:bg-emerald-600/40 border border-white/20 rounded-xl p-3 text-left text-white text-xs sm:text-sm font-semibold transition-all flex items-center justify-between">
+                            <span>${step}</span>
+                            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'watering') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                        <p class="text-xs text-lime-300 mt-1" id="wateringStatus">Tanaman disiram: 0 / 3</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 w-full max-w-md mb-4">
+                `;
+                task.plants.forEach((plant, idx) => {
+                    html += `
+                        <button onclick="handleWaterPlant(${idx})" id="plant-${idx}" class="bg-white/10 hover:bg-lime-600/40 border border-white/20 rounded-2xl p-5 flex flex-col items-center text-white transition-all">
+                            <i id="plant-icon-${idx}" class="fa-solid fa-seedling text-4xl mb-2 text-amber-500"></i>
+                            <span class="text-xs font-semibold">${plant.name}</span>
+                            <span id="plant-txt-${idx}" class="text-[10px] text-amber-200 mt-1">Haus 💧</span>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'sort_books') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                    </div>
+                    <div class="flex flex-col gap-3 w-full max-w-md mb-4">
+                `;
+                task.books.forEach((book, idx) => {
+                    html += `
+                        <div class="bg-white/10 border border-white/20 rounded-xl p-3 flex items-center justify-between text-white">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid ${book.icon} text-2xl text-purple-300"></i>
+                                <span class="text-xs sm:text-sm font-semibold">${book.name}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="handleBookSort(${idx}, 'cerita')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Rak Cerita</button>
+                                <button onclick="handleBookSort(${idx}, 'matematika')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Rak Math</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            } else if (task.type === 'choices_roleplay') {
+                let html = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-base sm:text-lg font-bold text-white">${task.question}</h3>
+                    </div>
+                    <div class="flex flex-col gap-3 w-full max-w-md mb-4">
+                `;
+                task.options.forEach((opt, idx) => {
+                    html += `
+                        <button onclick="handleRoleplayChoice(${opt.correct})" class="bg-white/10 hover:bg-rose-600/40 border border-white/20 rounded-xl p-3.5 text-left text-white text-xs sm:text-sm font-semibold transition-all">
+                            ${opt.text}
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+                area.innerHTML = html;
+            }
+        }
+
+        let catSelectedCount = 0;
+        function handleCategorizeClick(idx, isValid) {
+            const btn = document.getElementById(`cat-btn-${idx}`);
+            if (isValid) {
+                playSound('success');
+                btn.classList.add('bg-emerald-500/80', 'border-emerald-400', 'scale-105');
+                btn.disabled = true;
+                catSelectedCount++;
+                showSpeech("Hebat! Bahan makanan tersebut sangat sehat dan segar.");
+                if (catSelectedCount >= 3) {
+                    setTimeout(advanceTaskStep, 800);
+                }
+            } else {
+                playSound('error');
+                btn.classList.add('bg-rose-500/80', 'animate-wiggle');
+                showSpeech("Ups! Itu bukan bahan makanan yang sehat untuk sup.");
+                setTimeout(() => btn.classList.remove('bg-rose-500/80', 'animate-wiggle'), 500);
+            }
+        }
+
+        function handleWasteClick(isValid) {
+            if (isValid) {
+                playSound('success');
+                showSpeech("Pintar! Sampah organik dibuang ke tempat sampah yang tepat.");
+                setTimeout(advanceTaskStep, 800);
+            } else {
+                playSound('error');
+                showSpeech("Bukan itu! Sampah plastik dipisah ke tempat lain ya.");
+            }
+        }
+
+        let toyCount = 0;
+        function handleToyClick(idx) {
+            playSound('success');
+            const btn = document.getElementById(`toy-${idx}`);
+            btn.classList.add('opacity-50', 'scale-95');
+            btn.disabled = true;
+            toyCount++;
+            showSpeech("Keren! Mainan berhasil dirapikan kembali ke tempatnya.");
+            if (toyCount >= 3) {
+                setTimeout(advanceTaskStep, 800);
+            }
+        }
+
+        function handleSequenceClick(idx) {
+            playSound('success');
+            showSpeech("Langkah yang sangat tepat dan disiplin!");
+            setTimeout(advanceTaskStep, 800);
+        }
+
+        let wateredCount = 0;
+        function handleWaterPlant(idx) {
+            playSound('success');
+            const icon = document.getElementById(`plant-icon-${idx}`);
+            const txt = document.getElementById(`plant-txt-${idx}`);
+            const btn = document.getElementById(`plant-${idx}`);
+            
+            icon.className = "fa-solid fa-seedling text-4xl mb-2 text-emerald-400 sparkle-effect";
+            txt.innerText = "Segar 🌿";
+            btn.disabled = true;
+            wateredCount++;
+            document.getElementById('wateringStatus').innerText = `Tanaman disiram: ${wateredCount} / 3`;
+            showSpeech("Tanaman tersenyum gembira karena disiram air segar!");
+
+            if (wateredCount >= 3) {
+                setTimeout(advanceTaskStep, 800);
+            }
+        }
+
+        function handleBookSort(idx, cat) {
+            playSound('success');
+            showSpeech("Buku berhasil dikelompokkan dengan rapi di rak!");
+            setTimeout(advanceTaskStep, 800);
+        }
+
+        function handleRoleplayChoice(isCorrect) {
+            if (isCorrect) {
+                playSound('success');
+                showSpeech("Sempurna! Menyambut tamu dengan sopan menunjukkan keluarga yang ramah.");
+                setTimeout(advanceTaskStep, 800);
+            } else {
+                playSound('error');
+                showSpeech("Wah, kurang tepat. Kita harus bersikap ramah kepada tamu.");
+            }
+        }
+
+        function advanceTaskStep() {
+            const mission = missionsData[gameState.currentMissionIndex];
+            gameState.currentTaskStep++;
+            catSelectedCount = 0;
+            toyCount = 0;
+            wateredCount = 0;
+
+            if (gameState.currentTaskStep < mission.tasks.length) {
+                renderCurrentTask();
+            } else {
+                completeMission();
+            }
+        }
+
+        function completeMission() {
+            playSound('success');
+            const mission = missionsData[gameState.currentMissionIndex];
+            gameState.missionsCompleted[gameState.currentMissionIndex] = true;
+
+            document.getElementById('successTitle').innerText = `${mission.title} Selesai!`;
+            document.getElementById('successDesc').innerText = `Luar biasa! Kamu berhasil menuntaskan misi dan belajar arti kerjasama keluarga.`;
+            document.getElementById('rewardBadgeName').innerText = mission.rewardBadge;
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessAndReturn() {
+            playSound('click');
+            document.getElementById('successModal').classList.add('hidden');
+            returnToMap();
+        }
+
+        function openTrophyRoom() {
+            playSound('click');
+            const listEl = document.getElementById('badgeGalleryList');
+            listEl.innerHTML = '';
+
+            missionsData.forEach((mission, idx) => {
+                const isUnlocked = gameState.missionsCompleted[idx];
+                listEl.innerHTML += `
+                    <div class="bg-white/10 border ${isUnlocked ? 'border-amber-400/50 bg-amber-500/10' : 'border-white/10'} rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl ${isUnlocked ? 'bg-gradient-to-tr from-amber-400 to-yellow-500 text-slate-900' : 'bg-slate-800 text-slate-500'} flex items-center justify-center text-xl shadow-md">
+                            <i class="fa-solid ${isUnlocked ? 'fa-award' : 'fa-lock'}"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-white font-bold text-sm">${mission.title}</h4>
+                            <p class="text-xs ${isUnlocked ? 'text-amber-300 font-semibold' : 'text-slate-400'}">${isUnlocked ? mission.rewardBadge : 'Belum Terbuka'}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('trophyModal').classList.remove('hidden');
+        }
+
+        function closeTrophyRoom() {
+            playSound('click');
+            document.getElementById('trophyModal').classList.add('hidden');
+        }
+
+        function confirmReset() {
+            playSound('click');
+            if (confirm("Apakah kamu ingin mengulang seluruh permainan dari awal?")) {
+                gameState.score = 0;
+                gameState.missionsCompleted = [false, false, false, false, false, false];
+                updateUI();
+                showSpeech("Permainan diatur ulang. Ayo mulai petualangan baru!");
+            }
+        }
+
+        // Initialize UI on load
+        window.onload = function() {
+            updateUI();
+        };
+    </script>
+</body>
+</html>
